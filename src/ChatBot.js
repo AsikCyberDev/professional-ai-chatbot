@@ -33,6 +33,10 @@ export class ChatBot extends LitElement {
     maxTokens: { type: Number },
     topP: { type: Number },
     enableSettings: { type: Boolean },
+    customColors: { type: Object }, // New property for custom colors
+    buttonLabels: { type: Object }, // New property for customizable button labels
+    fontSize: { type: String }, // New property for custom font sizes
+    showToolbar: { type: Boolean }, // New property to show/hide toolbar
   };
 
   static styles = css`
@@ -58,15 +62,20 @@ export class ChatBot extends LitElement {
     this.temperature = this.initialTemperature;
     this.maxTokens = this.initialMaxTokens;
     this.topP = this.initialTopP;
-    this.enableSettings = false; // Settings disabled by default
+    this.enableSettings = false;
+    this.customColors = { background: '#1f2937', text: '#ffffff', button: '#3b82f6' }; // Default color scheme
+    this.buttonLabels = { send: 'Send', close: 'Close', settings: 'Settings' }; // Default button labels
+    this.fontSize = 'text-base'; // Default font size
+    this.showToolbar = true; // Show toolbar by default
   }
 
   render() {
     if (!this.isChatOpen) {
       return html`
         <button
-          class="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          class="fixed bottom-4 right-4 ${this.customColors.button} text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           @click=${() => this.isChatOpen = true}
+          aria-label="Open Chat"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -76,30 +85,31 @@ export class ChatBot extends LitElement {
     }
 
     return html`
-      <div class="fixed bottom-4 right-4 ${this.theme === 'dark' ? 'bg-gray-800' : 'bg-white'} text-white rounded-lg shadow-2xl w-96 max-h-[80vh] flex flex-col transition-all duration-300 ease-in-out transform ${this.isChatOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}">
-        <div class="flex items-center justify-between ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-blue-600'} p-4 rounded-t-lg">
-          <span class="text-lg font-semibold">${this.heading}</span>
+      <div class="fixed bottom-4 right-4 ${this.customColors.background} text-white rounded-lg shadow-2xl w-96 max-h-[80vh] flex flex-col transition-all duration-300 ease-in-out transform ${this.isChatOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}">
+        <div class="flex items-center justify-between ${this.customColors.background} p-4 rounded-t-lg">
+          <span class="text-lg font-semibold ${this.fontSize}">${this.heading}</span>
           <div class="flex space-x-2">
             ${this.enableSettings ? html`
-              <button class="text-white hover:text-gray-300 transition-colors duration-300" @click=${() => this.isSettingsOpen = !this.isSettingsOpen}>
+              <button class="text-white hover:text-gray-300 transition-colors duration-300" @click=${() => this.isSettingsOpen = !this.isSettingsOpen} aria-label="Toggle Settings">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </button>
             ` : ''}
-            <button class="text-white hover:text-gray-300 transition-colors duration-300" @click=${() => this.isChatOpen = false}>
+            <button class="text-white hover:text-gray-300 transition-colors duration-300" @click=${() => this.isChatOpen = false} aria-label="${this.buttonLabels.close}">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
         </div>
+        ${this.showToolbar ? this.renderToolbar() : ''}
         ${this.isSettingsOpen && this.enableSettings ? this.renderSettings() : ''}
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
           ${this.messages.map((message, index) => this.renderMessage(message, index))}
         </div>
-        <div class="p-4 ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} border-t ${this.theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}">
+        <div class="p-4 ${this.customColors.background} border-t border-gray-300">
           <div class="flex items-center space-x-2">
             <input
               type="text"
@@ -110,11 +120,13 @@ export class ChatBot extends LitElement {
               placeholder="Type your message..."
               ?disabled=${this.isLoading}
               id="chat-input"
+              aria-label="Message input"
             />
             <button
               @click=${this.handleSend}
-              class="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${this.isLoading ? 'opacity-50 cursor-not-allowed' : ''}"
+              class="p-2 ${this.customColors.button} text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${this.isLoading ? 'opacity-50 cursor-not-allowed' : ''}"
               ?disabled=${this.isLoading}
+              aria-label="${this.buttonLabels.send}"
             >
               ${this.isLoading
         ? html`<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -132,6 +144,14 @@ export class ChatBot extends LitElement {
     `;
   }
 
+  renderToolbar() {
+    return html`
+      <div class="p-2 flex justify-end space-x-2 ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}">
+        <button @click=${this.clearChat} class="text-xs ${this.theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} hover:underline" aria-label="Clear chat">Clear Chat</button>
+      </div>
+    `;
+  }
+
   renderSettings() {
     return html`
       <div class="p-4 ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'} border-b ${this.theme === 'dark' ? 'border-gray-600' : 'border-gray-300'} space-y-4">
@@ -142,6 +162,7 @@ export class ChatBot extends LitElement {
             .value=${this.selectedModel}
             @change=${(e) => this.selectedModel = e.target.value}
             class="mt-1 block w-full pl-3 pr-10 py-2 text-base ${this.theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'} border ${this.theme === 'dark' ? 'border-gray-600' : 'border-gray-300'} focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            aria-label="Model Selection"
           >
             ${this.models.map((model) => html`
               <option value=${model}>${model}</option>
@@ -159,6 +180,7 @@ export class ChatBot extends LitElement {
             max="2"
             step="0.1"
             class="mt-1 block w-full"
+            aria-label="Temperature adjustment"
           />
         </div>
         <div>
@@ -171,6 +193,7 @@ export class ChatBot extends LitElement {
             min="1"
             max="8192"
             class="mt-1 block w-full"
+            aria-label="Max tokens adjustment"
           />
         </div>
         <div>
@@ -184,6 +207,7 @@ export class ChatBot extends LitElement {
             max="1"
             step="0.1"
             class="mt-1 block w-full"
+            aria-label="Top P adjustment"
           />
         </div>
       </div>
@@ -199,7 +223,7 @@ export class ChatBot extends LitElement {
     return html`
       <div class="flex ${containerClass} items-end space-x-2">
         <div class="flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} space-y-1 max-w-[75%]">
-          <div class="${messageClass} px-4 py-2 rounded-lg shadow">
+          <div class="${messageClass} px-4 py-2 rounded-lg shadow ${this.fontSize}">
             <div class="prose ${this.theme === 'dark' ? 'prose-invert' : ''} max-w-none">
              ${unsafeHTML(marked(message.content))}
             </div>
@@ -207,9 +231,10 @@ export class ChatBot extends LitElement {
           <button
             @click=${() => this.copyToClipboard(message.content)}
             class="text-xs ${this.theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-700'} transition-colors duration-300"
+            aria-label="Copy message"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
             Copy
           </button>
@@ -287,6 +312,11 @@ export class ChatBot extends LitElement {
         this.focusInput(); // Focus the input field after error
       }
     }
+  }
+
+  clearChat() {
+    this.messages = [];
+    this.focusInput();
   }
 
   copyToClipboard(content) {

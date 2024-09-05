@@ -1,3 +1,5 @@
+//rolllup.config.mjs
+
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
