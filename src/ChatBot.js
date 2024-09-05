@@ -304,13 +304,16 @@ export class ChatBot extends LitElement {
 
   updated(changedProperties) {
     if (changedProperties.has('messages')) {
-      this.scrollToBottom();
+      // Use requestAnimationFrame to ensure the DOM has updated
+      requestAnimationFrame(() => this.scrollToBottom());
     }
   }
 
   scrollToBottom() {
-    const chatContainer = this.shadowRoot.querySelector('.overflow-y-auto');
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    const chatContainer = this.shadowRoot?.querySelector('.overflow-y-auto');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
   }
 }
 
