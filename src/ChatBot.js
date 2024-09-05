@@ -3,16 +3,6 @@ import { LitElement, css, html, unsafeCSS } from 'https://cdn.jsdelivr.net/gh/li
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked@4.0.0/lib/marked.esm.js';
 import styles from './styles.css';
 
-const defaultModels = [
-  "AI21-Jamba-Instruct", "Cohere-command-r", "Cohere-command-r-plus", "Meta-Llama-3-70B-Instruct",
-  "Meta-Llama-3-8B-Instruct", "Meta-Llama-3-1-405B-Instruct", "Meta-Llama-3-1-70B-Instruct",
-  "Meta-Llama-3-1-8B-Instruct", "Mistral-large", "Mistral-large-2407", "Mistral-Nemo",
-  "Mistral-small", "gpt-4o", "gpt-4o-mini", "Phi-3-medium-128k-instruct", "Phi-3-medium-4k-instruct",
-  "Phi-3-mini-128k-instruct", "Phi-3-mini-4k-instruct", "Phi-3-small-128k-instruct",
-  "Phi-3-small-8k-instruct", "Phi-3.5-mini-instruct", "text-embedding-3-large",
-  "text-embedding-3-small", "cohere-embed-v3-english", "cohere-embed-v3-multilingual"
-];
-
 export class ChatBot extends LitElement {
   static properties = {
     endpoint: { type: String },
@@ -33,13 +23,28 @@ export class ChatBot extends LitElement {
     maxTokens: { type: Number },
     topP: { type: Number },
     enableSettings: { type: Boolean },
-    customColors: { type: Object }, // New property for custom colors
-    buttonLabels: { type: Object }, // New property for customizable button labels
-    fontSize: { type: String }, // New property for custom font sizes
-    showToolbar: { type: Boolean }, // New property to show/hide toolbar
+    customColors: { type: Object },
+    buttonLabels: { type: Object },
+    fontSize: { type: String },
+    showToolbar: { type: Boolean },
   };
 
   static styles = css`
+    :host {
+      --bg-color: var(--custom-background, #1f2937);
+      --text-color: var(--custom-text, #ffffff);
+      --button-color: var(--custom-button, #3b82f6);
+    }
+
+    .chat-container {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .chat-button {
+      background-color: var(--button-color);
+    }
+
     ${unsafeCSS(styles)}
   `;
 
@@ -63,17 +68,38 @@ export class ChatBot extends LitElement {
     this.maxTokens = this.initialMaxTokens;
     this.topP = this.initialTopP;
     this.enableSettings = false;
-    this.customColors = { background: '#1f2937', text: '#ffffff', button: '#3b82f6' }; // Default color scheme
-    this.buttonLabels = { send: 'Send', close: 'Close', settings: 'Settings' }; // Default button labels
-    this.fontSize = 'text-base'; // Default font size
-    this.showToolbar = true; // Show toolbar by default
+    this.customColors = { background: '#1f2937', text: '#ffffff', button: '#3b82f6' };
+    this.buttonLabels = { send: 'Send', close: 'Close', settings: 'Settings' };
+    this.fontSize = 'text-base';
+    this.showToolbar = true;
+  }
+
+  firstUpdated() {
+    // Update CSS custom properties based on component attributes
+    this.updateCustomProperties();
+  }
+
+  updateCustomProperties() {
+    const { background, text, button } = this.customColors;
+    this.style.setProperty('--custom-background', background);
+    this.style.setProperty('--custom-text', text);
+    this.style.setProperty('--custom-button', button);
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has('customColors')) {
+      this.updateCustomProperties();
+    }
+    if (changedProperties.has('messages')) {
+      requestAnimationFrame(() => this.scrollToBottom());
+    }
   }
 
   render() {
     if (!this.isChatOpen) {
       return html`
         <button
-          class="fixed bottom-4 right-4 ${this.customColors.button} text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          class="fixed bottom-4 right-4 chat-button text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           @click=${() => this.isChatOpen = true}
           aria-label="Open Chat"
         >
@@ -85,8 +111,8 @@ export class ChatBot extends LitElement {
     }
 
     return html`
-      <div class="fixed bottom-4 right-4 ${this.customColors.background} text-white rounded-lg shadow-2xl w-96 max-h-[80vh] flex flex-col transition-all duration-300 ease-in-out transform ${this.isChatOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}">
-        <div class="flex items-center justify-between ${this.customColors.background} p-4 rounded-t-lg">
+      <div class="chat-container fixed bottom-4 right-4 text-white rounded-lg shadow-2xl w-96 max-h-[80vh] flex flex-col transition-all duration-300 ease-in-out transform ${this.isChatOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}">
+        <div class="flex items-center justify-between bg-gray-800 p-4 rounded-t-lg">
           <span class="text-lg font-semibold ${this.fontSize}">${this.heading}</span>
           <div class="flex space-x-2">
             ${this.enableSettings ? html`
@@ -109,14 +135,14 @@ export class ChatBot extends LitElement {
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
           ${this.messages.map((message, index) => this.renderMessage(message, index))}
         </div>
-        <div class="p-4 ${this.customColors.background} border-t border-gray-300">
+        <div class="p-4 bg-gray-700 border-t border-gray-300">
           <div class="flex items-center space-x-2">
             <input
               type="text"
               .value=${this.input}
               @input=${(e) => this.input = e.target.value}
               @keypress=${(e) => e.key === 'Enter' && this.handleSend()}
-              class="flex-1 p-2 ${this.theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-white text-gray-800'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="flex-1 p-2 bg-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Type your message..."
               ?disabled=${this.isLoading}
               id="chat-input"
@@ -124,7 +150,7 @@ export class ChatBot extends LitElement {
             />
             <button
               @click=${this.handleSend}
-              class="p-2 ${this.customColors.button} text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${this.isLoading ? 'opacity-50 cursor-not-allowed' : ''}"
+              class="p-2 chat-button text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${this.isLoading ? 'opacity-50 cursor-not-allowed' : ''}"
               ?disabled=${this.isLoading}
               aria-label="${this.buttonLabels.send}"
             >
