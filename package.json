@@ -19,7 +19,7 @@
     "web-component",
     "lit-element"
   ],
-  "author": "Your Name",
+  "author": "Asik Mydeen",
   "license": "MIT",
   "dependencies": {
     "lit": "^2.6.1",
