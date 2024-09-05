@@ -5,7 +5,9 @@
   "main": "dist/chatbot.js",
   "module": "dist/chatbot.js",
   "files": [
-    "dist"
+    "dist/",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "rollup -c",

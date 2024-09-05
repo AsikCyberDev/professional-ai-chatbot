@@ -1,0 +1,55 @@
+# Source files
+src/
+
+# Configuration files
+rollup.config.js
+tailwind.config.js
+postcss.config.js
+
+# Development files
+.gitignore
+.eslintrc.json
+.prettierrc
+
+# Test files
+test/
+*.test.js
+*.spec.js
+
+# Documentation
+docs/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Build files (if you're building on the user's machine)
+# dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
