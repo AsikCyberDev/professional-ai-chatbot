@@ -32,6 +32,7 @@ export class ChatBot extends LitElement {
     temperature: { type: Number },
     maxTokens: { type: Number },
     topP: { type: Number },
+    enableSettings: { type: Boolean },
   };
 
   static styles = css`
@@ -57,6 +58,7 @@ export class ChatBot extends LitElement {
     this.temperature = this.initialTemperature;
     this.maxTokens = this.initialMaxTokens;
     this.topP = this.initialTopP;
+    this.enableSettings = false; // Settings disabled by default
   }
 
   render() {
@@ -78,12 +80,14 @@ export class ChatBot extends LitElement {
         <div class="flex items-center justify-between ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-blue-600'} p-4 rounded-t-lg">
           <span class="text-lg font-semibold">${this.heading}</span>
           <div class="flex space-x-2">
-            <button class="text-white hover:text-gray-300 transition-colors duration-300" @click=${() => this.isSettingsOpen = !this.isSettingsOpen}>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
+            ${this.enableSettings ? html`
+              <button class="text-white hover:text-gray-300 transition-colors duration-300" @click=${() => this.isSettingsOpen = !this.isSettingsOpen}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            ` : ''}
             <button class="text-white hover:text-gray-300 transition-colors duration-300" @click=${() => this.isChatOpen = false}>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -91,7 +95,7 @@ export class ChatBot extends LitElement {
             </button>
           </div>
         </div>
-        ${this.isSettingsOpen ? this.renderSettings() : ''}
+        ${this.isSettingsOpen && this.enableSettings ? this.renderSettings() : ''}
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
           ${this.messages.map((message, index) => this.renderMessage(message, index))}
         </div>
@@ -105,6 +109,7 @@ export class ChatBot extends LitElement {
               class="flex-1 p-2 ${this.theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-white text-gray-800'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Type your message..."
               ?disabled=${this.isLoading}
+              id="chat-input"
             />
             <button
               @click=${this.handleSend}
@@ -255,6 +260,7 @@ export class ChatBot extends LitElement {
               const data = line.slice(6).trim();
               if (data === '[DONE]') {
                 this.isLoading = false;
+                this.focusInput(); // Focus the input field after AI response
                 return;
               }
               try {
@@ -278,6 +284,7 @@ export class ChatBot extends LitElement {
           { role: 'assistant', content: 'Sorry, an error occurred. Please try again.' }
         ];
         this.isLoading = false;
+        this.focusInput(); // Focus the input field after error
       }
     }
   }
@@ -302,9 +309,17 @@ export class ChatBot extends LitElement {
     }, 2000);
   }
 
+  focusInput() {
+    requestAnimationFrame(() => {
+      const inputElement = this.shadowRoot?.querySelector('#chat-input');
+      if (inputElement) {
+        inputElement.focus();
+      }
+    });
+  }
+
   updated(changedProperties) {
     if (changedProperties.has('messages')) {
-      // Use requestAnimationFrame to ensure the DOM has updated
       requestAnimationFrame(() => this.scrollToBottom());
     }
   }
