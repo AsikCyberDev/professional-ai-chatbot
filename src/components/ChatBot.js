@@ -138,22 +138,21 @@ export class ChatBot extends LitElement {
     margin-bottom: 0.5rem; /* Reduce vertical margin */
     padding: 0.5rem 0.75rem; /* Adjust padding for compactness */
     border-radius: 0.375rem;
-    max-width: 80%; /* Utilize horizontal space */
     display: inline-block;
     animation: fadeIn 0.2s ease-in-out; /* Slight animation for smoother appearance */
-    word-wrap: break-word;
-    white-space: pre-wrap;
+    word-wrap: normal;
+    white-space: wrap;
     line-height: 1.4; /* Adjust line height for readability */
 }
 
       .message.user {
     margin-left: auto;
-    text-align: right;
+    text-align: center;
 }
 
       .message.assistant {
     margin-right: auto;
-    text-align: left;
+    text-align: center;
 }
 
       .dark .message.assistant {

@@ -3,31 +3,49 @@
 @import 'tailwindcss/utilities';
 @import 'animate.css'; /* Import animations if needed */
 
-/* Custom styles */
+/* Main container for the chatbot */
 .chatbot-container {
   @apply fixed bottom-4 right-4 w-80 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden;
 }
 
+/* Chatbot header styles */
 .chatbot-header {
   @apply flex items-center justify-between p-4 bg-blue-600 text-white;
 }
 
+/* Container for the messages */
 .chatbot-messages {
-  @apply h-96 overflow-y-auto p-4 space-y-4;
+  @apply flex-1 overflow-y-auto p-2 space-y-2 max-h-[80vh];
 }
 
+/* Message styles common for both user and bot */
 .chatbot-message {
-  @apply p-2 rounded-lg max-w-[80%];
+  @apply px-3 py-1 rounded-lg max-w-[75%] break-words shadow-none;
 }
 
+/* User message styling */
 .user-message {
-  @apply bg-blue-100 dark:bg-blue-900 ml-auto;
+  @apply bg-blue-600 text-white ml-auto text-right;
+  margin-right: 8px; /* Optional margin for spacing */
 }
 
+/* Bot message styling */
 .bot-message {
-  @apply bg-gray-100 dark:bg-gray-700;
+  @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-left;
+  margin-left: 8px; /* Optional margin for spacing */
 }
 
+/* Input area styling */
 .chatbot-input {
-  @apply p-4 border-t border-gray-200 dark:border-gray-700;
+  @apply flex items-center p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800;
+}
+
+/* Input field styles */
+.chatbot-input input {
+  @apply flex-1 p-2 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Send button styles */
+.chatbot-input button {
+  @apply p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
 }
