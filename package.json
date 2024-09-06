@@ -1,6 +1,6 @@
 {
   "name": "professional-ai-chatbot",
-  "version": "1.0.100",
+  "version": "1.0.102",
   "description": "A professional AI chatbot web component",
   "main": "dist/chatbot.js",
   "module": "dist/chatbot.js",
@@ -22,6 +22,7 @@
   "author": "Asik Mydeen",
   "license": "MIT",
   "dependencies": {
+    "highlight": "^0.2.4",
     "lit": "^2.6.1",
     "marked": "^4.0.0"
   },

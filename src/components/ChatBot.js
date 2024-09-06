@@ -39,9 +39,11 @@ export class ChatBot extends LitElement {
         initialPlaceholder: { type: String },
         subsequentPlaceholder: { type: String },
         themeSliderValue: { type: Number },
+        chatContainerWidth: { type: Number },
+        chatContainerHeight: { type: Number },
     };
 
-    static styles = [ css`
+    static styles = [css`
       :host {
         --bg-color: #1a202c;
         --text-color: #ffffff;
@@ -70,6 +72,9 @@ export class ChatBot extends LitElement {
         border: 1px solid var(--border-color);
         overflow: hidden;
         animation: slideIn 0.3s ease-in-out;
+        resize: both;
+        min-width: 300px;
+        min-height: 400px;
       }
 
       .chat-button {
@@ -103,6 +108,7 @@ export class ChatBot extends LitElement {
         background: var(--header-bg);
         color: var(--header-text);
         border-bottom: 1px solid var(--border-color);
+        cursor: move;
       }
 
       .chat-input-container {
@@ -228,11 +234,9 @@ export class ChatBot extends LitElement {
       .input-error {
         animation: shake 0.3s;
         border-color: #e3342f;
-      }`
-      ,
-        unsafeCSS(styles)
-    ]
-      ;
+      }`,
+    unsafeCSS(styles)
+    ];
 
     constructor() {
         super();
@@ -240,7 +244,7 @@ export class ChatBot extends LitElement {
         this.heading = 'AI Assistant';
         this.models = defaultModels;
         this.theme = 'dark';
-        this.initialModel = 'gpt-4o';
+        this.initialModel = this.initialModel;
         this.initialTemperature = 0.7;
         this.initialMaxTokens = 2048;
         this.initialTopP = 0.9;
@@ -260,6 +264,8 @@ export class ChatBot extends LitElement {
         this.initialPlaceholder = 'Type your message...';
         this.subsequentPlaceholder = 'Continue the conversation...';
         this.themeSliderValue = 0;
+        this.chatContainerWidth = 384; // 24rem
+        this.chatContainerHeight = 600; // initial height
     }
 
     firstUpdated() {
@@ -267,6 +273,62 @@ export class ChatBot extends LitElement {
         this.updateThemeColors();
         this.syncSettingsUI();
         this.scrollToBottom();
+    }
+
+    updated(changedProperties) {
+        super.updated(changedProperties);
+        this.setupResizeObserver();
+        this.setupDraggable();
+    }
+
+    setupResizeObserver() {
+        const chatContainer = this.shadowRoot.querySelector('.chat-container');
+        if (chatContainer && !this.resizeObserver) {
+            this.resizeObserver = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    this.chatContainerWidth = entry.contentRect.width;
+                    this.chatContainerHeight = entry.contentRect.height;
+                    this.requestUpdate();
+                }
+            });
+            this.resizeObserver.observe(chatContainer);
+        }
+    }
+
+    setupDraggable() {
+        const container = this.shadowRoot.querySelector('.chat-container');
+        const header = this.shadowRoot.querySelector('.chat-header');
+        if (!container || !header) return;
+
+        let isDragging = false;
+        let startX, startY, startLeft, startTop;
+
+        const startDragging = (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = container.offsetLeft;
+            startTop = container.offsetTop;
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDragging);
+        };
+
+        const drag = (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                container.style.left = `${startLeft + deltaX}px`;
+                container.style.top = `${startTop + deltaY}px`;
+            }
+        };
+
+        const stopDragging = () => {
+            isDragging = false;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDragging);
+        };
+
+        header.addEventListener('mousedown', startDragging);
     }
 
     syncSettingsUI() {
@@ -370,7 +432,7 @@ export class ChatBot extends LitElement {
 
     renderChatContainer() {
         return html`
-          <div class="chat-container">
+          <div class="chat-container" style="width: ${this.chatContainerWidth}px; height: ${this.chatContainerHeight}px;">
             <div class="chat-header">
               <span class="text-lg font-semibold ${this.fontSize}">${this.heading}</span>
               <div class="flex space-x-2">
@@ -652,6 +714,18 @@ export class ChatBot extends LitElement {
         const chatContainer = this.shadowRoot?.querySelector('.message-container');
         if (chatContainer) {
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+        // Remove event listeners if needed
+        const header = this.shadowRoot.querySelector('.chat-header');
+        if (header) {
+            header.removeEventListener('mousedown', this.startDragging);
         }
     }
 }
