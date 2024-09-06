@@ -41,8 +41,7 @@ export class ChatBot extends LitElement {
         themeSliderValue: { type: Number },
     };
 
-    static styles = [
-        css`
+    static styles = [ css`
       :host {
         --bg-color: #1a202c;
         --text-color: #ffffff;
@@ -70,6 +69,7 @@ export class ChatBot extends LitElement {
         flex-direction: column;
         border: 1px solid var(--border-color);
         overflow: hidden;
+        animation: slideIn 0.3s ease-in-out;
       }
 
       .chat-button {
@@ -83,7 +83,16 @@ export class ChatBot extends LitElement {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         cursor: pointer;
         border: none;
-        transition: background-color 0.3s;
+        transition: background-color 0.3s, transform 0.3s;
+      }
+
+      .chat-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .chat-button:active {
+        transform: scale(0.95);
       }
 
       .chat-header {
@@ -122,66 +131,71 @@ export class ChatBot extends LitElement {
         padding: 0.5rem 1rem;
         border-radius: 0.375rem;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: background-color 0.3s, transform 0.3s;
+      }
+
+      .send-button:hover {
+        transform: scale(1.05);
       }
 
       .message-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem 1rem; /* Reduced padding for a more compact look */
-    background: var(--bg-color);
-    scroll-behavior: smooth;
-    max-height: calc(80vh - 8rem); /* Adjust to accommodate header and input */
-}
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.5rem 1rem;
+        background: var(--bg-color);
+        scroll-behavior: smooth;
+        max-height: calc(80vh - 8rem);
+      }
 
       .message {
-    margin-bottom: 0.5rem; /* Reduce vertical margin */
-    padding: 0.5rem 0.75rem; /* Adjust padding for compactness */
-    border-radius: 0.375rem;
-    display: inline-block;
-    animation: fadeIn 0.2s ease-in-out; /* Slight animation for smoother appearance */
-    word-wrap: normal;
-    white-space: wrap;
-    line-height: 1.4; /* Adjust line height for readability */
-}
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+        display: inline-block;
+        animation: slideIn 0.3s ease-in-out;
+        word-wrap: normal;
+        white-space: wrap;
+        line-height: 1.4;
+        transition: transform 0.3s, opacity 0.3s;
+      }
 
       .message.user {
-    margin-left: auto;
-    text-align: center;
-}
+        margin-left: auto;
+        text-align: center;
+      }
 
       .message.assistant {
-    margin-right: auto;
-    text-align: center;
-}
+        margin-right: auto;
+        text-align: center;
+      }
 
       .dark .message.assistant {
         background-color: #374151;
         color: #ffffff;
       }
 
-     .icon-button {
-    background: none;
-    border: none;
-    padding: 0.25rem; /* Smaller padding for icon buttons */
-    cursor: pointer;
-    transition: filter 0.3s;
-}
+      .icon-button {
+        background: none;
+        border: none;
+        padding: 0.25rem;
+        cursor: pointer;
+        transition: filter 0.3s;
+      }
 
-.icon {
-    width: 16px; /* Slightly smaller icon for better spacing */
-    height: 16px;
-    fill: none; /* Use stroke color */
-    stroke: currentColor;
-    transition: fill 0.3s;
-}
+      .icon {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        transition: fill 0.3s;
+      }
 
-.icon-button:hover .icon {
-    filter: brightness(0.8);
-}
+      .icon-button:hover .icon {
+        transform: scale(1.1);
+        transition: transform 0.3s;
+      }
 
-
-      @keyframes fadeIn {
+      @keyframes slideIn {
         from {
           opacity: 0;
           transform: translateY(10px);
@@ -191,9 +205,34 @@ export class ChatBot extends LitElement {
           transform: translateY(0);
         }
       }
-    `,
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .icon.animate-spin {
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-10px); }
+        40%, 80% { transform: translateX(10px); }
+      }
+
+      .input-error {
+        animation: shake 0.3s;
+        border-color: #e3342f;
+      }`
+      ,
         unsafeCSS(styles)
-    ];
+    ]
+      ;
 
     constructor() {
         super();
@@ -220,18 +259,17 @@ export class ChatBot extends LitElement {
         this.showToolbar = true;
         this.initialPlaceholder = 'Type your message...';
         this.subsequentPlaceholder = 'Continue the conversation...';
-        this.themeSliderValue = 0; // Slider value to adjust between dark (0), light (100), and colorful in between
+        this.themeSliderValue = 0;
     }
 
     firstUpdated() {
         this.loadThemeFromLocalStorage();
         this.updateThemeColors();
-        this.syncSettingsUI(); // Ensure UI elements reflect the initial settings
-        this.scrollToBottom(); // Ensure auto-scroll on initial render
+        this.syncSettingsUI();
+        this.scrollToBottom();
     }
 
     syncSettingsUI() {
-        // Sync the settings UI with the initial values
         const modelSelect = this.shadowRoot.querySelector('#model-select');
         if (modelSelect) {
             modelSelect.value = this.initialModel;
@@ -255,7 +293,7 @@ export class ChatBot extends LitElement {
 
     updateThemeColors() {
         const value = this.themeSliderValue;
-        if (value <= 10) { // Dark mode
+        if (value <= 10) {
             this.style.setProperty('--bg-color', '#1a202c');
             this.style.setProperty('--text-color', '#ffffff');
             this.style.setProperty('--button-color', '#4a5568');
@@ -266,7 +304,7 @@ export class ChatBot extends LitElement {
             this.style.setProperty('--header-bg', '#2d3748');
             this.style.setProperty('--header-text', '#ffffff');
             this.style.setProperty('--button-text', '#ffffff');
-        } else if (value >= 90) { // Light mode
+        } else if (value >= 90) {
             this.style.setProperty('--bg-color', '#ffffff');
             this.style.setProperty('--text-color', '#1f2937');
             this.style.setProperty('--button-color', '#3b82f6');
@@ -277,8 +315,8 @@ export class ChatBot extends LitElement {
             this.style.setProperty('--header-bg', '#e5e7eb');
             this.style.setProperty('--header-text', '#1f2937');
             this.style.setProperty('--button-text', '#ffffff');
-        } else { // Colorful mode in between
-            const progress = (value - 10) / 80; // Map slider value from 10-90 to 0-1
+        } else {
+            const progress = (value - 10) / 80;
             this.style.setProperty('--bg-color', `linear-gradient(90deg, #43cea2 ${progress * 100}%, #185a9d)`);
             this.style.setProperty('--text-color', `hsl(${progress * 200}, 70%, 90%)`);
             this.style.setProperty('--button-color', `hsl(${progress * 200 + 120}, 70%, 50%)`);
@@ -312,167 +350,167 @@ export class ChatBot extends LitElement {
 
     render() {
         return html`
-      ${this.isChatOpen ? this.renderChatContainer() : this.renderChatButton()}
-    `;
+          ${this.isChatOpen ? this.renderChatContainer() : this.renderChatButton()}
+        `;
     }
 
     renderChatButton() {
         return html`
-      <button
-        class="chat-button"
-        @click=${() => this.isChatOpen = true}
-        aria-label="Open Chat"
-      >
-        <!-- Chat Button SVG Icon -->
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 17H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-      </button>
-    `;
+          <button
+            class="chat-button"
+            @click=${() => this.isChatOpen = true}
+            aria-label="Open Chat"
+          >
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M9 17H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+            </svg>
+          </button>
+        `;
     }
 
     renderChatContainer() {
         return html`
-        <div class="chat-container">
+          <div class="chat-container">
             <div class="chat-header">
-                <span class="text-lg font-semibold ${this.fontSize}">${this.heading}</span>
-                <div class="flex space-x-2">
-                    ${this.enableSettings ? html`
-                        <button class="icon-button" @click=${() => this.isSettingsOpen = !this.isSettingsOpen} aria-label="Toggle Settings">
-                            <!-- Settings SVG Icon -->
-                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.14 12.936a7.031 7.031 0 010-1.872l2.037-1.486a.5.5 0 00.122-.617l-1.931-3.343a.5.5 0 00-.6-.22l-2.397.96a7.012 7.012 0 00-1.621-.94l-.36-2.548a.5.5 0 00-.492-.416h-3.862a.5.5 0 00-.492.416l-.36 2.548a7.012 7.012 0 00-1.621.94l-2.397-.96a.5.5 0 00-.6.22l-1.931 3.343a.5.5 0 00.122.617l2.037 1.486c-.056.299-.086.603-.086.911s.03.612.086.911l-2.037 1.486a.5.5 0 00-.122.617l1.931 3.343a.5.5 0 00.6.22l2.397-.96a7.012 7.012 0 001.621.94l.36 2.548a.5.5 0 00.492.416h3.862a.5.5 0 00.492-.416l.36-2.548a7.012 7.012 0 001.621-.94l2.397.96a.5.5 0 00.6-.22l1.931-3.343a.5.5 0 00-.122-.617l-2.037-1.486zM12 15.6a3.6 3.6 0 110-7.2 3.6 3.6 0 010 7.2z"/></svg>
-                        </button>
-                    ` : ''}
-                    <button class="icon-button" @click=${() => this.isChatOpen = false} aria-label="${this.buttonLabels.close}">
-                        <!-- Updated Close SVG Icon -->
-                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
+              <span class="text-lg font-semibold ${this.fontSize}">${this.heading}</span>
+              <div class="flex space-x-2">
+                ${this.enableSettings ? html`
+                  <button class="icon-button" @click=${() => this.isSettingsOpen = !this.isSettingsOpen} aria-label="Toggle Settings">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M19.14 12.936a7.031 7.031 0 010-1.872l2.037-1.486a.5.5 0 00.122-.617l-1.931-3.343a.5.5 0 00-.6-.22l-2.397.96a7.012 7.012 0 00-1.621-.94l-.36-2.548a.5.5 0 00-.492-.416h-3.862a.5.5 0 00-.492.416l-.36 2.548a7.012 7.012 0 00-1.621.94l-2.397-.96a.5.5 0 00-.6.22l-1.931 3.343a.5.5 0 00.122.617l2.037 1.486c-.056.299-.086.603-.086.911s.03.612.086.911l-2.037 1.486a.5.5 0 00-.122.617l1.931 3.343a.5.5 0 00.6.22l2.397-.96a7.012 7.012 0 001.621.94l.36 2.548a.5.5 0 00.492.416h3.862a.5.5 0 00.492-.416l.36-2.548a7.012 7.012 0 001.621-.94l2.397.96a.5.5 0 00.6-.22l1.931-3.343a.5.5 0 00-.122-.617l-2.037-1.486zM12 15.6a3.6 3.6 0 110-7.2 3.6 3.6 0 010 7.2z"/>
+                    </svg>
+                  </button>
+                ` : ''}
+                <button class="icon-button" @click=${() => this.isChatOpen = false} aria-label="${this.buttonLabels.close}">
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             ${this.showToolbar ? this.renderToolbar() : ''}
             ${this.isSettingsOpen && this.enableSettings ? this.renderSettings() : ''}
             <div class="message-container" id="message-container">
-                ${this.messages.map((message, index) => this.renderMessage(message, index))}
+              ${this.messages.map((message, index) => this.renderMessage(message, index))}
             </div>
             <div class="chat-input-container">
-                <input
-                    type="text"
-                    .value=${this.input}
-                    @input=${(e) => this.input = e.target.value}
-                    @keypress=${(e) => e.key === 'Enter' && this.handleSend()}
-                    class="chat-input"
-                    placeholder=${this.messages.length === 0 ? this.initialPlaceholder : this.subsequentPlaceholder}
-                    ?disabled=${this.isLoading}
-                    id="chat-input"
-                    aria-label="Message input"
-                />
-                <button
-                    @click=${this.handleSend}
-                    class="send-button"
-                    ?disabled=${this.isLoading}
-                    aria-label="${this.buttonLabels.send}"
-                >
-                    ${this.isLoading
+              <input
+                type="text"
+                .value=${this.input}
+                @input=${(e) => this.input = e.target.value}
+                @keypress=${(e) => e.key === 'Enter' && this.handleSend()}
+                class="chat-input"
+                placeholder=${this.messages.length === 0 ? this.initialPlaceholder : this.subsequentPlaceholder}
+                ?disabled=${this.isLoading}
+                id="chat-input"
+                aria-label="Message input"
+              />
+              <button
+                @click=${this.handleSend}
+                class="send-button"
+                ?disabled=${this.isLoading}
+                aria-label="${this.buttonLabels.send}"
+              >
+                ${this.isLoading
                 ? html`<svg class="icon animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>`
-                : html`<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.185 3L3 21h18L10.185 3z"/></svg>`}
-                </button>
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>`
+                : html`<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M10.185 3L3 21h18L10.185 3z"/>
+                      </svg>`}
+              </button>
             </div>
-        </div>
-    `;
+          </div>
+        `;
     }
-
 
     renderToolbar() {
         return html`
-        <div class="p-2 flex justify-end space-x-2" style="background: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+          <div class="p-2 flex justify-end space-x-2" style="background: var(--bg-color); border-bottom: 1px solid var(--border-color);">
             <button @click=${this.clearChat} class="icon-button" aria-label="Clear chat">
-                <!-- Updated Clear Chat SVG Icon -->
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1 1 11h8l1-11 3-1v-1H3v1zm4 2h10v9H7V8zm4 0V5h2v3h-2z"/>
-                </svg>
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1 1 11h8l1-11 3-1v-1H3v1zm4 2h10v9H7V8zm4 0V5h2v3h-2z"/>
+              </svg>
             </button>
-        </div>
-    `;
+          </div>
+        `;
     }
-
 
     renderSettings() {
         return html`
-      <div class="p-4 border-b" style="background: var(--bg-color); border-color: var(--border-color);">
-        <div>
-          <label for="model-select" class="block text-sm font-medium" style="color: var(--text-color);">Model</label>
-          <select
-            id="model-select"
-            .value=${this.selectedModel}
-            @change=${(e) => this.selectedModel = e.target.value}
-            class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md"
-            style="background: var(--input-bg); color: var(--input-text); border-color: var(--border-color);"
-            aria-label="Model Selection"
-          >
-            ${this.models.map((model) => html`
-              <option value=${model} ?selected=${model === this.initialModel}>${model}</option>
-            `)}
-          </select>
-        </div>
-        <div>
-          <label for="temperature" class="block text-sm font-medium" style="color: var(--text-color);">Temperature: ${this.temperature.toFixed(2)}</label>
-          <input
-            type="range"
-            id="temperature"
-            .value=${this.temperature}
-            @input=${(e) => this.temperature = parseFloat(e.target.value)}
-            min="0"
-            max="2"
-            step="0.1"
-            class="mt-1 block w-full"
-            aria-label="Temperature adjustment"
-          />
-        </div>
-        <div>
-          <label for="max-tokens" class="block text-sm font-medium" style="color: var(--text-color);">Max Tokens: ${this.maxTokens}</label>
-          <input
-            type="range"
-            id="max-tokens"
-            .value=${this.maxTokens}
-            @input=${(e) => this.maxTokens = parseInt(e.target.value)}
-            min="1"
-            max="8192"
-            class="mt-1 block w-full"
-            aria-label="Max tokens adjustment"
-          />
-        </div>
-        <div>
-          <label for="top-p" class="block text-sm font-medium" style="color: var(--text-color);">Top P: ${this.topP.toFixed(2)}</label>
-          <input
-            type="range"
-            id="top-p"
-            .value=${this.topP}
-            @input=${(e) => this.topP = parseFloat(e.target.value)}
-            min="0"
-            max="1"
-            step="0.1"
-            class="mt-1 block w-full"
-            aria-label="Top P adjustment"
-          />
-        </div>
-        <div class="mt-4">
-          <h3 class="text-sm font-medium" style="color: var(--text-color);">Adjust Theme</h3>
-          <input
-            type="range"
-            id="theme-slider"
-            min="0"
-            max="100"
-            .value=${this.themeSliderValue}
-            @input=${this.handleThemeSliderChange}
-            class="mt-2 w-full"
-            aria-label="Theme adjustment slider"
-          />
-        </div>
-      </div>
-    `;
+          <div class="p-4 border-b" style="background: var(--bg-color); border-color: var(--border-color);">
+            <div>
+              <label for="model-select" class="block text-sm font-medium" style="color: var(--text-color);">Model</label>
+              <select
+                id="model-select"
+                .value=${this.selectedModel}
+                @change=${(e) => this.selectedModel = e.target.value}
+                class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md"
+                style="background: var(--input-bg); color: var(--input-text); border-color: var(--border-color);"
+                aria-label="Model Selection"
+              >
+                ${this.models.map((model) => html`
+                  <option value=${model} ?selected=${model === this.initialModel}>${model}</option>
+                `)}
+              </select>
+            </div>
+            <div>
+              <label for="temperature" class="block text-sm font-medium" style="color: var(--text-color);">Temperature: ${this.temperature.toFixed(2)}</label>
+              <input
+                type="range"
+                id="temperature"
+                .value=${this.temperature}
+                @input=${(e) => this.temperature = parseFloat(e.target.value)}
+                min="0"
+                max="2"
+                step="0.1"
+                class="mt-1 block w-full"
+                aria-label="Temperature adjustment"
+              />
+            </div>
+            <div>
+              <label for="max-tokens" class="block text-sm font-medium" style="color: var(--text-color);">Max Tokens: ${this.maxTokens}</label>
+              <input
+                type="range"
+                id="max-tokens"
+                .value=${this.maxTokens}
+                @input=${(e) => this.maxTokens = parseInt(e.target.value)}
+                min="1"
+                max="8192"
+                class="mt-1 block w-full"
+                aria-label="Max tokens adjustment"
+              />
+            </div>
+            <div>
+              <label for="top-p" class="block text-sm font-medium" style="color: var(--text-color);">Top P: ${this.topP.toFixed(2)}</label>
+              <input
+                type="range"
+                id="top-p"
+                .value=${this.topP}
+                @input=${(e) => this.topP = parseFloat(e.target.value)}
+                min="0"
+                max="1"
+                step="0.1"
+                class="mt-1 block w-full"
+                aria-label="Top P adjustment"
+              />
+            </div>
+            <div class="mt-4">
+              <h3 class="text-sm font-medium" style="color: var(--text-color);">Adjust Theme</h3>
+              <input
+                type="range"
+                id="theme-slider"
+                min="0"
+                max="100"
+                .value=${this.themeSliderValue}
+                @input=${this.handleThemeSliderChange}
+                class="mt-2 w-full"
+                aria-label="Theme adjustment slider"
+              />
+            </div>
+          </div>
+        `;
     }
 
     renderMessage(message) {
@@ -482,28 +520,26 @@ export class ChatBot extends LitElement {
             : `message assistant ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} ${this.theme === 'dark' ? 'text-white' : 'text-gray-800'}`;
 
         return html`
-        <div class="flex ${containerClass} items-end space-x-2 w-full">
+          <div class="flex ${containerClass} items-end space-x-2 w-full">
             <div class="flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} space-y-1 max-w-[80%]">
-                <div class="${messageClass} px-3 py-2 rounded-lg shadow-sm">
-                    <div class="prose ${this.theme === 'dark' ? 'prose-invert' : ''} max-w-none">
-                        ${unsafeHTML(marked(message.content))}
-                    </div>
+              <div class="${messageClass} px-3 py-2 rounded-lg shadow-sm">
+                <div class="prose ${this.theme === 'dark' ? 'prose-invert' : ''} max-w-none">
+                  ${unsafeHTML(marked(message.content))}
                 </div>
-                <button
-                    @click=${() => this.copyToClipboard(message.content)}
-                    class="icon-button"
-                    aria-label="Copy message"
-                >
-                    <!-- Updated Copy SVG Icon -->
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                </button>
+              </div>
+              <button
+                @click=${() => this.copyToClipboard(message.content)}
+                class="icon-button"
+                aria-label="Copy message"
+              >
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+              </button>
             </div>
-        </div>
-    `;
+          </div>
+        `;
     }
-
 
     async handleSend() {
         if (this.input.trim() && !this.isLoading) {
@@ -547,8 +583,8 @@ export class ChatBot extends LitElement {
                             const data = line.slice(6).trim();
                             if (data === '[DONE]') {
                                 this.isLoading = false;
-                                this.focusInput(); // Focus the input field after AI response
-                                this.scrollToBottom(); // Scroll to the bottom after message
+                                this.focusInput();
+                                this.scrollToBottom();
                                 return;
                             }
                             try {
@@ -558,7 +594,7 @@ export class ChatBot extends LitElement {
                                     assistantMessage.content += content;
                                     this.messages = [...this.messages.slice(0, -1), { ...assistantMessage }];
                                     this.requestUpdate();
-                                    this.scrollToBottom(); // Scroll to the bottom as content updates
+                                    this.scrollToBottom();
                                 }
                             } catch (error) {
                                 console.error('Error parsing JSON:', error, 'Data:', data);
@@ -573,7 +609,7 @@ export class ChatBot extends LitElement {
                     { role: 'assistant', content: 'Sorry, an error occurred. Please try again.' }
                 ];
                 this.isLoading = false;
-                this.focusInput(); // Focus the input field after error
+                this.focusInput();
             }
         }
     }
