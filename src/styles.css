@@ -1,33 +1,201 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-@import 'animate.css';
+@import 'animate.css'; /* Import animations if needed */
 
-/* Custom styles */
+:host {
+        --bg-color: #1a202c;
+        --text-color: #ffffff;
+        --button-color: #4a5568;
+        --input-bg: #2d3748;
+        --input-text: #e2e8f0;
+        --border-color: #2d3748;
+        --icon-color: #e2e8f0;
+        --header-bg: #2d3748;
+        --header-text: #ffffff;
+        --button-text: #ffffff;
+      }
+
+      .chat-container {
+        background: var(--bg-color);
+        color: var(--text-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 24rem;
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+      }
+
+      .chat-button {
+        background-color: var(--button-color);
+        color: var(--button-text);
+        border-radius: 50%;
+        padding: 1rem;
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        border: none;
+        transition: background-color 0.3s;
+      }
+
+      .chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: var(--header-bg);
+        color: var(--header-text);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .chat-input-container {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--input-bg);
+      }
+
+      .chat-input {
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        border: 1px solid var(--border-color);
+        flex-grow: 1;
+        margin-right: 0.5rem;
+        font-size: var(--font-size);
+      }
+
+      .send-button {
+        background-color: var(--button-color);
+        color: var(--button-text);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .message-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 1rem; /* Reduced padding for a more compact look */
+    background: var(--bg-color);
+    scroll-behavior: smooth;
+    max-height: calc(80vh - 8rem); /* Adjust to accommodate header and input */
+}
+
+      .message {
+    margin-bottom: 0.5rem; /* Reduce vertical margin */
+    padding: 0.5rem 0.75rem; /* Adjust padding for compactness */
+    border-radius: 0.375rem;
+    max-width: 80%; /* Utilize horizontal space */
+    display: inline-block;
+    animation: fadeIn 0.2s ease-in-out; /* Slight animation for smoother appearance */
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.4; /* Adjust line height for readability */
+}
+
+      .message.user {
+    margin-left: auto;
+    text-align: right;
+}
+
+      .message.assistant {
+    margin-right: auto;
+    text-align: left;
+}
+
+      .dark .message.assistant {
+        background-color: #374151;
+        color: #ffffff;
+      }
+
+     .icon-button {
+    background: none;
+    border: none;
+    padding: 0.25rem; /* Smaller padding for icon buttons */
+    cursor: pointer;
+    transition: filter 0.3s;
+}
+
+.icon {
+    width: 16px; /* Slightly smaller icon for better spacing */
+    height: 16px;
+    fill: none; /* Use stroke color */
+    stroke: currentColor;
+    transition: fill 0.3s;
+}
+
+.icon-button:hover .icon {
+    filter: brightness(0.8);
+}
+
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+/* Main container for the chatbot */
 .chatbot-container {
   @apply fixed bottom-4 right-4 w-80 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden;
 }
 
+/* Chatbot header styles */
 .chatbot-header {
   @apply flex items-center justify-between p-4 bg-blue-600 text-white;
 }
 
+/* Container for the messages */
 .chatbot-messages {
-  @apply h-96 overflow-y-auto p-4 space-y-4;
+  @apply flex-1 overflow-y-auto p-2 space-y-2 max-h-[80vh];
 }
 
+/* Message styles common for both user and bot */
 .chatbot-message {
-  @apply p-2 rounded-lg max-w-[80%];
+  @apply px-3 py-1 rounded-lg max-w-[75%] break-words shadow-none;
 }
 
+/* User message styling */
 .user-message {
-  @apply bg-blue-100 dark:bg-blue-900 ml-auto;
+  @apply bg-blue-600 text-white ml-auto text-right;
+  margin-right: 8px; /* Optional margin for spacing */
 }
 
+/* Bot message styling */
 .bot-message {
-  @apply bg-gray-100 dark:bg-gray-700;
+  @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-left;
+  margin-left: 8px; /* Optional margin for spacing */
 }
 
+/* Input area styling */
 .chatbot-input {
-  @apply p-4 border-t border-gray-200 dark:border-gray-700;
+  @apply flex items-center p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800;
+}
+
+/* Input field styles */
+.chatbot-input input {
+  @apply flex-1 p-2 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Send button styles */
+.chatbot-input button {
+  @apply p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
 }
