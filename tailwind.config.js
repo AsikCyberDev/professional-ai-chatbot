@@ -1,6 +1,6 @@
 module.exports = {
-    content: ['./src/**/*.js', './src/**/*.html'], // Make sure to cover all component paths
-    darkMode: 'class', // Enable class-based dark mode
+    content: ['./src/**/*.js', './src/**/*.html'], // Include all relevant files where Tailwind classes might be used
+    darkMode: 'class', // Use class-based dark mode as the component uses class toggles
     theme: {
         extend: {
             colors: {

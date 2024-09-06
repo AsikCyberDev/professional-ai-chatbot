@@ -1,13 +1,13 @@
 import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
+import resolve from '@rollup/plugin-node-resolve'; // Correct import for resolve plugin
 import autoprefixer from 'autoprefixer';
-import nesting from 'postcss-nesting'; // Ensure nesting is consistent in both PostCSS and Rollup
+import nesting from 'postcss-nesting'; // Include nesting for CSS nesting support
 import postcss from 'rollup-plugin-postcss';
 import { terser } from 'rollup-plugin-terser';
 import tailwindcss from 'tailwindcss';
 
 export default {
-    input: 'src/ChatBot.js',
+    input: 'src/index.js', // Use the entry point
     output: {
         file: 'dist/chatbot.js',
         format: 'es',
@@ -33,11 +33,11 @@ export default {
                         },
                     },
                 }),
-                nesting, // Ensure nesting support
+                nesting, // Support CSS nesting for Tailwind utilities and custom styles
                 autoprefixer,
             ],
             inject: true, // Inject CSS directly into JS for use with Shadow DOM
-            extract: false, // Don't extract CSS to a separate file
+            extract: false, // Don't extract CSS to a separate file to avoid style conflicts
             minimize: true, // Minimize CSS for production
         }),
         terser(), // Minify JS for production
