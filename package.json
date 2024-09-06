@@ -1,6 +1,6 @@
 {
   "name": "professional-ai-chatbot",
-  "version": "1.0.48",
+  "version": "1.0.53",
   "description": "A professional AI chatbot web component",
   "main": "dist/chatbot.js",
   "module": "dist/chatbot.js",
