@@ -1,7 +1,7 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-@import 'animate.css'; /* Import animations if needed */
+@import 'animate.css';
 
 /* Custom styles */
 .chatbot-container {

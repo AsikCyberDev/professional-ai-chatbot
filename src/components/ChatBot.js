@@ -125,42 +125,6 @@ export class ChatBot extends LitElement {
         transition: background-color 0.3s;
       }
 
-      .message-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem 1rem; /* Reduced padding for a more compact look */
-    background: var(--bg-color);
-    scroll-behavior: smooth;
-    max-height: calc(80vh - 8rem); /* Adjust to accommodate header and input */
-}
-
-      .message {
-    margin-bottom: 0.5rem; /* Reduce vertical margin */
-    padding: 0.5rem 0.75rem; /* Adjust padding for compactness */
-    border-radius: 0.375rem;
-    max-width: 80%; /* Utilize horizontal space */
-    display: inline-block;
-    animation: fadeIn 0.2s ease-in-out; /* Slight animation for smoother appearance */
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    line-height: 1.4; /* Adjust line height for readability */
-}
-
-      .message.user {
-    margin-left: auto;
-    text-align: right;
-}
-
-      .message.assistant {
-    margin-right: auto;
-    text-align: left;
-}
-
-      .dark .message.assistant {
-        background-color: #374151;
-        color: #ffffff;
-      }
-
      .icon-button {
     background: none;
     border: none;
@@ -192,6 +156,36 @@ export class ChatBot extends LitElement {
           transform: translateY(0);
         }
       }
+
+         .message {
+
+    animation: fadeIn 0.2s ease-in-out; /* Slight animation for smoother appearance */
+    line-height: 1.4; /* Adjust line height for readability */
+}
+
+           .message.user {
+    margin-left: auto;
+    text-align: right;
+}
+
+      .message.assistant {
+    margin-right: auto;
+    text-align: left;
+}
+
+      .dark .message.assistant {
+        background-color: #374151;
+        color: #ffffff;
+      }
+        .message-container {
+
+    background: var(--bg-color);
+    scroll-behavior: smooth;
+    max-height: calc(80vh - 8rem); /* Adjust to accommodate header and input */
+}
+
+
+
     `,
         unsafeCSS(styles)
     ];
