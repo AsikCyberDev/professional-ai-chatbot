@@ -1,7 +1,22 @@
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+import python from 'highlight.js/lib/languages/python';
 import { unsafeHTML } from 'https://cdn.jsdelivr.net/gh/lit/dist@2/all/lit-all.min.js';
 import { LitElement, css, html, unsafeCSS } from 'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js';
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked@4.0.0/lib/marked.esm.js';
 import styles from './styles.css';
+
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('python', python);
+
+function loadHighlightJsCss() {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css';
+  document.head.appendChild(link);
+}
+
+loadHighlightJsCss();
 
 const defaultModels = [
   "AI21-Jamba-Instruct", "Cohere-command-r", "Cohere-command-r-plus", "Meta-Llama-3-70B-Instruct",
@@ -35,7 +50,6 @@ export class ChatBot extends LitElement {
     enableSettings: { type: Boolean },
     buttonLabels: { type: Object },
     fontSize: { type: String },
-    showToolbar: { type: Boolean },
     initialPlaceholder: { type: String },
     subsequentPlaceholder: { type: String },
     themeSliderValue: { type: Number },
@@ -61,6 +75,7 @@ export class ChatBot extends LitElement {
       --header-bg: #2d3748;
       --header-text: #ffffff;
       --button-text: #ffffff;
+      --accent-color: #3b82f6;
     }
 
     .chat-container {
@@ -78,10 +93,16 @@ export class ChatBot extends LitElement {
       flex-direction: column;
       border: 1px solid var(--border-color);
       overflow: hidden;
-      animation: fadeIn 0.3s ease-in-out;
+      animation: fadeIn 0.3s ease-in-out, slideUp 0.4s ease-out;
       resize: both;
       min-width: 384px;
       min-height: 600px;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    }
+
+    .chat-container.hide {
+      transform: translateY(20px);
+      opacity: 0;
     }
 
     .chat-button {
@@ -95,11 +116,12 @@ export class ChatBot extends LitElement {
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       cursor: pointer;
       border: none;
-      transition: background-color 0.3s, transform 0.3s;
+      transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
+      animation: popIn 0.4s ease-out;
     }
 
     .chat-button:hover {
-      transform: scale(1.05);
+      transform: scale(1.1);
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     }
 
@@ -116,6 +138,7 @@ export class ChatBot extends LitElement {
       color: var(--header-text);
       border-bottom: 1px solid var(--border-color);
       cursor: move;
+      animation: fadeIn 0.3s ease-in-out;
     }
 
     .chat-input-container {
@@ -124,6 +147,7 @@ export class ChatBot extends LitElement {
       padding: 0.5rem;
       border-top: 1px solid var(--border-color);
       background: var(--input-bg);
+      animation: slideInBottom 0.3s ease-out;
     }
 
     .chat-input {
@@ -135,20 +159,26 @@ export class ChatBot extends LitElement {
       flex-grow: 1;
       margin-right: 0.5rem;
       font-size: var(--font-size);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .chat-input:focus {
+      box-shadow: 0 0 8px var(--accent-color);
     }
 
     .send-button {
-      background-color: var(--button-color);
+      background-color: var(--accent-color);
       color: var(--button-text);
       border: none;
       padding: 0.5rem 1rem;
       border-radius: 0.375rem;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.3s;
+      transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
+      animation: slideInBottom 0.3s ease-out;
     }
 
     .send-button:hover {
-      transform: scale(1.05);
+      transform: scale(1.1);
     }
 
     .message-container {
@@ -158,6 +188,7 @@ export class ChatBot extends LitElement {
       background: var(--bg-color);
       scroll-behavior: smooth;
       max-height: calc(80vh - 8rem);
+      animation: fadeIn 0.3s ease-in-out;
     }
 
     .message {
@@ -165,7 +196,7 @@ export class ChatBot extends LitElement {
       padding: 0.5rem 0.75rem;
       border-radius: 0.375rem;
       display: inline-block;
-      animation: fadeIn 0.3s ease-in-out;
+      animation: fadeIn 0.3s ease-in-out, slideIn 0.3s ease-out;
       word-wrap: break-word;
       line-height: 1.4;
       transition: transform 0.3s, opacity 0.3s;
@@ -191,7 +222,8 @@ export class ChatBot extends LitElement {
       border: none;
       padding: 0.25rem;
       cursor: pointer;
-      transition: filter 0.3s;
+      transition: transform 0.3s, opacity 0.3s;
+      animation: fadeIn 0.3s ease-out;
     }
 
     .icon {
@@ -199,11 +231,11 @@ export class ChatBot extends LitElement {
       height: 16px;
       fill: none;
       stroke: currentColor;
-      transition: fill 0.3s;
+      transition: transform 0.3s, fill 0.3s;
     }
 
     .icon-button:hover .icon {
-      transform: scale(1.1);
+      transform: scale(1.2);
       transition: transform 0.3s;
     }
 
@@ -214,6 +246,65 @@ export class ChatBot extends LitElement {
       to {
         opacity: 1;
       }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInBottom {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .settings-container {
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.3s ease-out, slideIn 0.3s ease-out;
+    }
+
+    .setting-item {
+      transition: background-color 0.3s, border-color 0.3s;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .setting-item:hover {
+      background-color: rgba(0, 0, 0, 0.05);
     }
   `,
   unsafeCSS(styles)];
@@ -240,7 +331,6 @@ export class ChatBot extends LitElement {
     this.enableSettings = true;
     this.buttonLabels = { send: 'Send', close: 'Close', settings: 'Settings' };
     this.fontSize = 'text-base';
-    this.showToolbar = true;
     this.initialPlaceholder = 'Type your message...';
     this.subsequentPlaceholder = 'Continue the conversation...';
     this.themeSliderValue = 0;
@@ -343,6 +433,7 @@ export class ChatBot extends LitElement {
   updateThemeColors() {
     const value = this.themeSliderValue;
     if (value <= 10) {
+      // Dark Theme
       this.style.setProperty('--bg-color', '#1a202c');
       this.style.setProperty('--text-color', '#ffffff');
       this.style.setProperty('--button-color', '#4a5568');
@@ -353,7 +444,9 @@ export class ChatBot extends LitElement {
       this.style.setProperty('--header-bg', '#2d3748');
       this.style.setProperty('--header-text', '#ffffff');
       this.style.setProperty('--button-text', '#ffffff');
+      this.style.setProperty('--accent-color', '#3b82f6');
     } else if (value >= 90) {
+      // Light Theme
       this.style.setProperty('--bg-color', '#ffffff');
       this.style.setProperty('--text-color', '#1f2937');
       this.style.setProperty('--button-color', '#3b82f6');
@@ -364,18 +457,21 @@ export class ChatBot extends LitElement {
       this.style.setProperty('--header-bg', '#e5e7eb');
       this.style.setProperty('--header-text', '#1f2937');
       this.style.setProperty('--button-text', '#ffffff');
+      this.style.setProperty('--accent-color', '#1d4ed8');
     } else {
+      // Gradient Theme Transition
       const progress = (value - 10) / 80;
-      this.style.setProperty('--bg-color', `linear-gradient(90deg, #43cea2 ${progress * 100}%, #185a9d)`);
-      this.style.setProperty('--text-color', `hsl(${progress * 200}, 70%, 90%)`);
-      this.style.setProperty('--button-color', `hsl(${progress * 200 + 120}, 70%, 50%)`);
-      this.style.setProperty('--input-bg', `hsl(${progress * 200}, 60%, 80%)`);
-      this.style.setProperty('--input-text', `hsl(${progress * 200}, 70%, 10%)`);
-      this.style.setProperty('--border-color', `hsl(${progress * 200}, 60%, 70%)`);
-      this.style.setProperty('--icon-color', `hsl(${progress * 200 + 180}, 60%, 40%)`);
-      this.style.setProperty('--header-bg', `hsl(${progress * 200}, 60%, 50%)`);
-      this.style.setProperty('--header-text', `hsl(${progress * 200}, 70%, 10%)`);
-      this.style.setProperty('--button-text', `hsl(${progress * 200 + 180}, 80%, 90%)`);
+      this.style.setProperty('--bg-color', `hsl(${progress * 210}, 40%, ${100 - progress * 50}%)`);
+      this.style.setProperty('--text-color', `hsl(${progress * 210}, 30%, ${30 + progress * 40}%)`);
+      this.style.setProperty('--button-color', `hsl(${progress * 210 + 120}, 60%, 50%)`);
+      this.style.setProperty('--input-bg', `hsl(${progress * 210}, 50%, 90%)`);
+      this.style.setProperty('--input-text', `hsl(${progress * 210}, 30%, 20%)`);
+      this.style.setProperty('--border-color', `hsl(${progress * 210}, 40%, 70%)`);
+      this.style.setProperty('--icon-color', `hsl(${progress * 210 + 180}, 60%, 40%)`);
+      this.style.setProperty('--header-bg', `hsl(${progress * 210}, 40%, 80%)`);
+      this.style.setProperty('--header-text', `hsl(${progress * 210}, 20%, 10%)`);
+      this.style.setProperty('--button-text', `hsl(${progress * 210 + 180}, 80%, 90%)`);
+      this.style.setProperty('--accent-color', `hsl(${progress * 210 + 90}, 60%, 50%)`);
     }
   }
 
@@ -586,23 +682,23 @@ export class ChatBot extends LitElement {
             </button>
           </div>
         </div>
-        ${this.showToolbar ? this.renderToolbar() : ''}
         ${this.isSettingsOpen && this.enableSettings ? this.renderSettings() : ''}
         <div class="message-container" id="message-container">
           ${this.messages.map((message, index) => this.renderMessage(message, index))}
         </div>
         <div class="chat-input-container">
-          <input
-            type="text"
+          <textarea
             .value=${this.input}
             @input=${(e) => this.input = e.target.value}
-            @keypress=${(e) => e.key === 'Enter' && this.handleSend()}
+            @keypress=${(e) => e.key === 'Enter' && !e.shiftKey && this.handleSend()}
             class="chat-input"
+            rows="2"
+            style="resize: none; overflow-y: auto;"
             placeholder=${this.messages.length === 0 ? this.initialPlaceholder : this.subsequentPlaceholder}
             ?disabled=${this.isLoading}
             id="chat-input"
             aria-label="Message input"
-          />
+          ></textarea>
           <button
             @click=${this.handleSend}
             class="send-button"
@@ -623,92 +719,87 @@ export class ChatBot extends LitElement {
     `;
   }
 
-  renderToolbar() {
+  renderSettings() {
     return html`
-      <div class="p-2 flex justify-end space-x-2" style="background: var(--bg-color); border-bottom: 1px solid var(--border-color);">
-        <button @click=${this.clearChat} class="icon-button" aria-label="Clear chat">
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <div class="settings-container p-4 border-b" style="background: var(--bg-color); border-color: var(--border-color); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <div class="setting-item mb-4">
+        <label for="model-select" class="block text-sm font-medium mb-1" style="color: var(--text-color);">Model</label>
+        <select
+          id="model-select"
+          .value=${this.selectedModel}
+          @change=${(e) => this.selectedModel = e.target.value}
+          class="block w-full pl-3 pr-10 py-2 text-base rounded-md border"
+          style="background: var(--input-bg); color: var(--input-text); border-color: var(--border-color);"
+          aria-label="Model Selection"
+        >
+          ${this.models.map((model) => html`
+            <option value=${model} ?selected=${model === this.selectedModel}>${model}</option>
+          `)}
+        </select>
+      </div>
+      <div class="setting-item mb-4">
+        <label for="temperature" class="block text-sm font-medium mb-1" style="color: var(--text-color);">Temperature: ${this.temperature.toFixed(2)}</label>
+        <input
+          type="range"
+          id="temperature"
+          .value=${this.temperature}
+          @input=${(e) => this.temperature = parseFloat(e.target.value)}
+          min="0"
+          max="2"
+          step="0.1"
+          class="w-full"
+          aria-label="Temperature adjustment"
+        />
+      </div>
+      <div class="setting-item mb-4">
+        <label for="max-tokens" class="block text-sm font-medium mb-1" style="color: var(--text-color);">Max Tokens: ${this.maxTokens}</label>
+        <input
+          type="range"
+          id="max-tokens"
+          .value=${this.maxTokens}
+          @input=${(e) => this.maxTokens = parseInt(e.target.value)}
+          min="1"
+          max="8192"
+          class="w-full"
+          aria-label="Max tokens adjustment"
+        />
+      </div>
+      <div class="setting-item mb-4">
+        <label for="top-p" class="block text-sm font-medium mb-1" style="color: var(--text-color);">Top P: ${this.topP.toFixed(2)}</label>
+        <input
+          type="range"
+          id="top-p"
+          .value=${this.topP}
+          @input=${(e) => this.topP = parseFloat(e.target.value)}
+          min="0"
+          max="1"
+          step="0.1"
+          class="w-full"
+          aria-label="Top P adjustment"
+        />
+      </div>
+      <div class="setting-item mb-4">
+        <h3 class="text-sm font-medium mb-1" style="color: var(--text-color);">Adjust Theme</h3>
+        <input
+          type="range"
+          id="theme-slider"
+          min="0"
+          max="100"
+          .value=${this.themeSliderValue}
+          @input=${this.handleThemeSliderChange}
+          class="w-full"
+          aria-label="Theme adjustment slider"
+        />
+      </div>
+      <div class="p-2 flex justify-end space-x-2" style="background: var(--bg-color); border-top: 1px solid var(--border-color);">
+        <button @click=${this.clearChat} class="icon-button" aria-label="Clear chat" style="background: var(--button-bg); color: var(--button-text); border-radius: 4px; padding: 8px;">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
             <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1 1 11h8l1-11 3-1v-1H3v1zm4 2h10v9H7V8zm4 0V5h2v3h-2z"/>
           </svg>
         </button>
       </div>
-    `;
-  }
-
-  renderSettings() {
-    return html`
-      <div class="p-4 border-b" style="background: var(--bg-color); border-color: var(--border-color);">
-        <div>
-          <label for="model-select" class="block text-sm font-medium" style="color: var(--text-color);">Model</label>
-          <select
-            id="model-select"
-            .value=${this.selectedModel}
-            @change=${(e) => this.selectedModel = e.target.value}
-            class="mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md"
-            style="background: var(--input-bg); color: var(--input-text); border-color: var(--border-color);"
-            aria-label="Model Selection"
-          >
-            ${this.models.map((model) => html`
-              <option value=${model} ?selected=${model === this.selectedModel}>${model}</option>
-            `)}
-          </select>
-        </div>
-        <div>
-          <label for="temperature" class="block text-sm font-medium" style="color: var(--text-color);">Temperature: ${this.temperature.toFixed(2)}</label>
-          <input
-            type="range"
-            id="temperature"
-            .value=${this.temperature}
-            @input=${(e) => this.temperature = parseFloat(e.target.value)}
-            min="0"
-            max="2"
-            step="0.1"
-            class="mt-1 block w-full"
-            aria-label="Temperature adjustment"
-          />
-        </div>
-        <div>
-          <label for="max-tokens" class="block text-sm font-medium" style="color: var(--text-color);">Max Tokens: ${this.maxTokens}</label>
-          <input
-            type="range"
-            id="max-tokens"
-            .value=${this.maxTokens}
-            @input=${(e) => this.maxTokens = parseInt(e.target.value)}
-            min="1"
-            max="8192"
-            class="mt-1 block w-full"
-            aria-label="Max tokens adjustment"
-          />
-        </div>
-        <div>
-          <label for="top-p" class="block text-sm font-medium" style="color: var(--text-color);">Top P: ${this.topP.toFixed(2)}</label>
-          <input
-            type="range"
-            id="top-p"
-            .value=${this.topP}
-            @input=${(e) => this.topP = parseFloat(e.target.value)}
-            min="0"
-            max="1"
-            step="0.1"
-            class="mt-1 block w-full"
-            aria-label="Top P adjustment"
-          />
-        </div>
-        <div class="mt-4">
-          <h3 class="text-sm font-medium" style="color: var(--text-color);">Adjust Theme</h3>
-          <input
-            type="range"
-            id="theme-slider"
-            min="0"
-            max="100"
-            .value=${this.themeSliderValue}
-            @input=${this.handleThemeSliderChange}
-            class="mt-2 w-full"
-            aria-label="Theme adjustment slider"
-          />
-        </div>
-      </div>
-    `;
+    </div>
+  `;
   }
 
   renderMessage(message) {
@@ -717,12 +808,21 @@ export class ChatBot extends LitElement {
       ? `message user ${this.theme === 'dark' ? 'bg-blue-600' : 'bg-blue-500'} text-white`
       : `message assistant ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} ${this.theme === 'dark' ? 'text-white' : 'text-gray-800'}`;
 
+    // Convert Markdown to HTML
+    const htmlContent = marked(message.content, {
+      highlight: function (code, lang) {
+        return lang && hljs.getLanguage(lang)
+          ? hljs.highlight(code, { language: lang }).value
+          : hljs.highlightAuto(code).value;
+      },
+    });
+
     return html`
       <div class="flex ${containerClass} items-end space-x-2 w-full">
         <div class="flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} space-y-1 max-w-[80%]">
           <div class="${messageClass} px-3 py-2 rounded-lg shadow-sm">
             <div class="prose ${this.theme === 'dark' ? 'prose-invert' : ''} max-w-none">
-              ${unsafeHTML(marked(message.content))}
+              ${unsafeHTML(htmlContent)}
             </div>
           </div>
           <button
@@ -731,7 +831,7 @@ export class ChatBot extends LitElement {
             aria-label="Copy message"
           >
             <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              <path d="M6 9h12v2H6V9zm0 4h12v2H6v-2zm0 4h12v2H6v-2z"/>
             </svg>
           </button>
         </div>

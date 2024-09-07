@@ -1,28 +1,29 @@
 import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve'; // Correct import for resolve plugin
+import resolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
-import nesting from 'postcss-nesting'; // Include nesting for CSS nesting support
+import nesting from 'postcss-nesting';
 import postcss from 'rollup-plugin-postcss';
 import { terser } from 'rollup-plugin-terser';
 import tailwindcss from 'tailwindcss';
 
 export default {
-    input: 'src/index.js', // Use the entry point
+    input: 'src/index.js', // Entry point
     output: {
         file: 'dist/chatbot.js',
         format: 'es',
-        sourcemap: true, // Enable sourcemaps for easier debugging
+        sourcemap: true,
     },
     plugins: [
         resolve({
             browser: true,
+            extensions: ['.js', '.json'], // Add extensions if needed
         }),
         commonjs(),
         postcss({
             plugins: [
                 tailwindcss({
-                    content: ['./src/**/*.js', './src/**/*.html'], // Ensure all relevant files are included
-                    darkMode: 'class', // Use class-based dark mode
+                    content: ['./src/**/*.js', './src/**/*.html'],
+                    darkMode: 'class',
                     theme: {
                         extend: {
                             colors: {
@@ -33,14 +34,14 @@ export default {
                         },
                     },
                 }),
-                nesting, // Support CSS nesting for Tailwind utilities and custom styles
+                nesting,
                 autoprefixer,
             ],
-            inject: true, // Inject CSS directly into JS for use with Shadow DOM
-            extract: false, // Don't extract CSS to a separate file to avoid style conflicts
-            minimize: true, // Minimize CSS for production
+            inject: true,
+            extract: false,
+            minimize: true,
         }),
-        terser(), // Minify JS for production
+        terser(),
     ],
     external: [
         'https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js',
