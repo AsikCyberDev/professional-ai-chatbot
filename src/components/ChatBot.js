@@ -76,13 +76,14 @@ export class ChatBot extends LitElement {
       --header-text: #ffffff;
       --button-text: #ffffff;
       --accent-color: #3b82f6;
+      --shadow-color: rgba(0, 0, 0, 0.15);
     }
 
     .chat-container {
       background: var(--bg-color);
       color: var(--text-color);
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 16px var(--shadow-color);
       width: 384px;
       height: 600px;
       position: fixed;
@@ -113,7 +114,7 @@ export class ChatBot extends LitElement {
       position: fixed;
       bottom: 1rem;
       right: 1rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px var(--shadow-color);
       cursor: pointer;
       border: none;
       transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
@@ -122,7 +123,7 @@ export class ChatBot extends LitElement {
 
     .chat-button:hover {
       transform: scale(1.1);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 12px var(--shadow-color);
     }
 
     .chat-button:active {
@@ -139,6 +140,7 @@ export class ChatBot extends LitElement {
       border-bottom: 1px solid var(--border-color);
       cursor: move;
       animation: fadeIn 0.3s ease-in-out;
+      box-shadow: 0 2px 4px var(--shadow-color);
     }
 
     .chat-input-container {
@@ -148,6 +150,7 @@ export class ChatBot extends LitElement {
       border-top: 1px solid var(--border-color);
       background: var(--input-bg);
       animation: slideInBottom 0.3s ease-out;
+      box-shadow: 0 -2px 4px var(--shadow-color);
     }
 
     .chat-input {
@@ -175,6 +178,7 @@ export class ChatBot extends LitElement {
       cursor: pointer;
       transition: background-color 0.3s, transform 0.3s, opacity 0.3s;
       animation: slideInBottom 0.3s ease-out;
+      box-shadow: 0 2px 4px var(--shadow-color);
     }
 
     .send-button:hover {
@@ -189,6 +193,7 @@ export class ChatBot extends LitElement {
       scroll-behavior: smooth;
       max-height: calc(80vh - 8rem);
       animation: fadeIn 0.3s ease-in-out;
+      box-shadow: inset 0 4px 8px var(--shadow-color);
     }
 
     .message {
@@ -200,6 +205,7 @@ export class ChatBot extends LitElement {
       word-wrap: break-word;
       line-height: 1.4;
       transition: transform 0.3s, opacity 0.3s;
+      box-shadow: 0 2px 4px var(--shadow-color);
     }
 
     .message.user {
@@ -294,7 +300,7 @@ export class ChatBot extends LitElement {
 
     .settings-container {
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 4px var(--shadow-color);
       animation: fadeIn 0.3s ease-out, slideIn 0.3s ease-out;
     }
 
@@ -445,6 +451,7 @@ export class ChatBot extends LitElement {
       this.style.setProperty('--header-text', '#ffffff');
       this.style.setProperty('--button-text', '#ffffff');
       this.style.setProperty('--accent-color', '#3b82f6');
+      this.style.setProperty('--shadow-color', 'rgba(0, 0, 0, 0.3)');
     } else if (value >= 90) {
       // Light Theme
       this.style.setProperty('--bg-color', '#ffffff');
@@ -458,6 +465,7 @@ export class ChatBot extends LitElement {
       this.style.setProperty('--header-text', '#1f2937');
       this.style.setProperty('--button-text', '#ffffff');
       this.style.setProperty('--accent-color', '#1d4ed8');
+      this.style.setProperty('--shadow-color', 'rgba(0, 0, 0, 0.15)');
     } else {
       // Gradient Theme Transition
       const progress = (value - 10) / 80;
@@ -472,6 +480,7 @@ export class ChatBot extends LitElement {
       this.style.setProperty('--header-text', `hsl(${progress * 210}, 20%, 10%)`);
       this.style.setProperty('--button-text', `hsl(${progress * 210 + 180}, 80%, 90%)`);
       this.style.setProperty('--accent-color', `hsl(${progress * 210 + 90}, 60%, 50%)`);
+      this.style.setProperty('--shadow-color', `rgba(0, 0, 0, ${0.3 - progress * 0.15})`);
     }
   }
 
@@ -538,9 +547,13 @@ export class ChatBot extends LitElement {
       let assistantMessage = { role: 'assistant', content: '' };
       this.messages = [...this.messages, assistantMessage];
 
-      while (true) {
+      const streamContent = async () => {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          this.scrollToBottom(true);
+          this.saveMessagesToLocalStorage();
+          return;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
@@ -550,7 +563,7 @@ export class ChatBot extends LitElement {
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim();
             if (data === '[DONE]') {
-              this.scrollToBottom();
+              this.scrollToBottom(true);
               this.saveMessagesToLocalStorage();
               return;
             }
@@ -568,7 +581,10 @@ export class ChatBot extends LitElement {
             }
           }
         }
-      }
+        setTimeout(streamContent, 50); // Continue streaming
+      };
+
+      streamContent();
     } catch (error) {
       if (attempt < this.maxRetryAttempts) {
         console.warn(`Retrying... (${attempt + 1}/${this.maxRetryAttempts})`);
@@ -624,10 +640,16 @@ export class ChatBot extends LitElement {
     });
   }
 
-  scrollToBottom() {
+  scrollToBottom(smooth = false) {
     const chatContainer = this.shadowRoot?.querySelector('.message-container');
     if (chatContainer) {
+      if (smooth) {
+        chatContainer.style.scrollBehavior = 'smooth';
+      }
       chatContainer.scrollTop = chatContainer.scrollHeight;
+      if (smooth) {
+        setTimeout(() => chatContainer.style.scrollBehavior = 'auto', 500);
+      }
     }
   }
 
@@ -721,7 +743,7 @@ export class ChatBot extends LitElement {
 
   renderSettings() {
     return html`
-    <div class="settings-container p-4 border-b" style="background: var(--bg-color); border-color: var(--border-color); border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+    <div class="settings-container p-4 border-b" style="background: var(--bg-color); border-color: var(--border-color); border-radius: 8px; box-shadow: 0 2px 4px var(--shadow-color);">
       <div class="setting-item mb-4">
         <label for="model-select" class="block text-sm font-medium mb-1" style="color: var(--text-color);">Model</label>
         <select
