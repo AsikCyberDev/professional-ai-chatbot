@@ -1,1 +1,3 @@
-import './components/ChatBot.js';
+// import './backup/components/ChatBot';
+
+import './components/chat-bot';
