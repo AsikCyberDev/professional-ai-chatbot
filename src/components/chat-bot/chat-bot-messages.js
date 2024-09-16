@@ -72,12 +72,19 @@ export const ChatBotMessages = {
     sendMessageWithRetry: async function (requestBody, attempt = 0) {
         let buffer = '';
         try {
+
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+
+            // Only add the Authorization header if authToken is provided and not empty
+            if (this.authToken && this.authToken.trim() !== '') {
+                headers['Authorization'] = `Bearer ${this.authToken}`;
+            }
+
             const response = await fetch(this.endpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.authToken}` // Add the authorization header
-                },
+                headers: headers,
                 body: JSON.stringify(requestBody),
             });
 
