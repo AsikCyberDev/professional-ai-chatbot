@@ -4,7 +4,6 @@ import { ChatBotSettings } from './chat-bot-settings.js';
 import { ChatBotStyles } from './chat-bot-styles.js';
 import { ChatBotTheme } from './chat-bot-theme.js';
 import { ChatBotUtils } from './chat-bot-utils.js';
-import { defaultModels } from './defaultModels.js';
 import styles from './styles.css';
 
 ChatBotUtils.loadHighlightJsCss();
@@ -15,7 +14,6 @@ export class ChatBot extends LitElement {
         heading: { type: String },
         models: { type: Array },
         theme: { type: String },
-        initialModel: { type: String },
         initialTemperature: { type: Number },
         initialMaxTokens: { type: Number },
         initialTopP: { type: Number },
@@ -52,7 +50,6 @@ export class ChatBot extends LitElement {
         this.heading = 'AI Assistant';
         this.models = this.models;
         this.theme = 'dark';
-        this.initialModel = this.initialModel;
         this.initialTemperature = 0.7;
         this.initialMaxTokens = 2048;
         this.initialTopP = 0.9;
@@ -61,7 +58,7 @@ export class ChatBot extends LitElement {
         this.isLoading = false;
         this.isChatOpen = false;
         this.isSettingsOpen = false;
-        this.selectedModel = this.initialModel;
+        this.selectedModel = this.selectedModel;
         this.temperature = this.initialTemperature;
         this.maxTokens = this.initialMaxTokens;
         this.topP = this.initialTopP;

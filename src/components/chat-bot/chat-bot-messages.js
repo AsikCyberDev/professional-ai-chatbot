@@ -1,10 +1,32 @@
 import hljs from 'highlight.js/lib/core';
-import { unsafeHTML } from 'https://cdn.jsdelivr.net/gh/lit/dist@2/all/lit-all.min.js';
 import { html } from 'lit';
 import { marked } from 'marked';
 
-export const ChatBotMessages = {
+// Standalone renderHTML function
+function renderHTML(htmlString) {
+    const template = document.createElement('template');
+    template.innerHTML = htmlString;
 
+    const sanitizeNode = (node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            // Remove all attributes except 'class'
+            Array.from(node.attributes).forEach(attr => {
+                if (attr.name !== 'class') {
+                    node.removeAttribute(attr.name);
+                }
+            });
+
+            // Recursively sanitize child nodes
+            node.childNodes.forEach(sanitizeNode);
+        }
+        return node;
+    };
+
+    const sanitizedFragment = sanitizeNode(template.content);
+    return html`${sanitizedFragment}`;
+}
+
+export const ChatBotMessages = {
     handleSend: async function () {
         if (this.input.trim() && !this.isLoading) {
             const userMessage = { role: 'user', content: this.input };
@@ -33,34 +55,35 @@ export const ChatBotMessages = {
             : `message assistant ${this.theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} ${this.theme === 'dark' ? 'text-white' : 'text-gray-800'}`;
 
         // Convert Markdown to HTML
-        const htmlContent = marked(message.content, {
-            highlight: (code, lang) => {
-                return lang && hljs.getLanguage(lang)
-                    ? hljs.highlight(code, { language: lang }).value
-                    : hljs.highlightAuto(code).value;
-            },
-        });
+        const renderer = new marked.Renderer();
+        renderer.code = (code, language) => {
+            const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
+            const highlightedCode = hljs.highlight(validLanguage, code).value;
+            return `<pre><code class="hljs ${validLanguage}">${highlightedCode}</code></pre>`;
+        };
+
+        const htmlContent = marked(message.content, { renderer });
 
         return html`
-      <div class="flex ${containerClass} items-end space-x-2 w-full">
-        <div class="flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} space-y-1 max-w-[80%]">
-          <div class="${messageClass} px-3 py-2 rounded-lg shadow-sm">
-            <div class="prose ${this.theme === 'dark' ? 'prose-invert' : ''} max-w-none">
-              ${unsafeHTML(htmlContent)}
+            <div class="flex ${containerClass} items-end space-x-2 w-full">
+                <div class="flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} space-y-1 max-w-[80%]">
+                    <div class="${messageClass} px-3 py-2 rounded-lg shadow-sm">
+                        <div class="prose ${this.theme === 'dark' ? 'prose-invert' : ''} max-w-none">
+                            ${renderHTML(htmlContent)}
+                        </div>
+                    </div>
+                    <button
+                        @click=${() => this.copyToClipboard(message.content)}
+                        class="icon-button"
+                        aria-label="Copy message"
+                    >
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M6 9h12v2H6V9zm0 4h12v2H6v-2zm0 4h12v2H6v-2z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-          </div>
-          <button
-            @click=${() => this.copyToClipboard(message.content)}
-            class="icon-button"
-            aria-label="Copy message"
-          >
-            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M6 9h12v2H6V9zm0 4h12v2H6v-2zm0 4h12v2H6v-2z"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    `;
+        `;
     },
 
     clearChat() {
@@ -72,7 +95,6 @@ export const ChatBotMessages = {
     sendMessageWithRetry: async function (requestBody, attempt = 0) {
         let buffer = '';
         try {
-
             const headers = {
                 'Content-Type': 'application/json',
             };
