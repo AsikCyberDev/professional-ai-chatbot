@@ -50,9 +50,9 @@ export class ChatBot extends LitElement {
         super();
         this.endpoint = '';
         this.heading = 'AI Assistant';
-        this.models = defaultModels;
+        this.models = this.models;
         this.theme = 'dark';
-        this.initialModel = 'Meta-Llama-3-70B-Instruct';
+        this.initialModel = this.initialModel;
         this.initialTemperature = 0.7;
         this.initialMaxTokens = 2048;
         this.initialTopP = 0.9;

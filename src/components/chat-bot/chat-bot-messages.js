@@ -75,7 +75,8 @@ export const ChatBotMessages = {
             const response = await fetch(this.endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.authToken}` // Add the authorization header
                 },
                 body: JSON.stringify(requestBody),
             });
